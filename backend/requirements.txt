@@ -1,5 +1,6 @@
 fastapi
 uvicorn
 feedparser
+requests
 groq
 python-dotenv
