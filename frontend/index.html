@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tech News</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #fafafa; color: #222; }
+    button { padding: 12px 24px; font-size: 16px; cursor: pointer; border: 0; border-radius: 8px; background: #2563eb; color: #fff; }
+    button:disabled { background: #94a3b8; cursor: wait; }
+    #digest { background: #fff; border-left: 4px solid #2563eb; padding: 12px 16px; margin: 20px 0; white-space: pre-wrap; display: none; }
+    .card { background: #fff; padding: 12px 16px; margin: 10px 0; border-radius: 8px; border: 1px solid #e5e7eb; }
+    .card a { color: #111; font-weight: 600; text-decoration: none; }
+    .card a:hover { text-decoration: underline; }
+    .meta { color: #666; font-size: 13px; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Tech News</h1>
+  <button id="btn" onclick="load()">Get Latest News</button>
+  <div id="digest"></div>
+  <div id="list"></div>
+
+  <script>
+    // localhost -> talk to backend on port 8000; on the server nginx handles /api
+    const API = (location.hostname === "localhost" || location.hostname === "" || location.hostname === "127.0.0.1")
+      ? "http://localhost:8000" : "";
+
+    async function load() {
+      const btn = document.getElementById("btn");
+      const digest = document.getElementById("digest");
+      const list = document.getElementById("list");
+
+      btn.disabled = true;
+      btn.textContent = "Loading...";
+      list.innerHTML = "";
+      digest.style.display = "none";
+
+      try {
+        const r = await fetch(API + "/api/news");
+        if (!r.ok) throw new Error("Server error " + r.status);
+        const data = await r.json();
+
+        digest.textContent = data.digest;
+        digest.style.display = "block";
+
+        data.articles.forEach(a => {
+          const card = document.createElement("div");
+          card.className = "card";
+
+          const link = document.createElement("a");
+          link.href = a.link;
+          link.target = "_blank";
+          link.rel = "noopener";
+          link.textContent = a.title;
+
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          meta.textContent = a.source + (a.published ? " · " + a.published : "");
+
+          card.append(link, meta);
+          list.appendChild(card);
+        });
+      } catch (err) {
+        list.textContent = "Something went wrong: " + err.message;
+      }
+
+      btn.disabled = false;
+      btn.textContent = "Get Latest News";
+    }
+  </script>
+</body>
+</html>
